@@ -1,0 +1,25 @@
+incident_id,title,description,category,severity,environment,status,related_document,duplicate_group,is_synthetic
+INC-001-1,Login lockout triggers after four attempts,Account locks one attempt early on staging,Auth,high,staging,open,documents/auth.md,DUP-001,true
+INC-001-2,Login lockout triggers after four attempts (reproduced),In QA environment: account locks one attempt early on staging. Tested with fresh account.,Auth,high,qa,triaged,documents/auth.md,DUP-001,true
+INC-002-1,Reset link accepted after expiry,Link accepted 40 minutes after issue,Auth,critical,staging,open,documents/reset.md,DUP-002,true
+INC-002-2,Reset link accepted after expiry (reproduced),In QA environment: link accepted 40 minutes after issue. Tested with fresh account.,Auth,critical,qa,triaged,documents/reset.md,DUP-002,true
+INC-003-1,Viewer can export unauthorized workspace,Viewer exports records from workspace B,Access,critical,staging,open,documents/export.md,DUP-003,true
+INC-003-2,Viewer can export unauthorized workspace (reproduced),In QA environment: viewer exports records from workspace b. Tested with fresh account.,Access,critical,qa,triaged,documents/export.md,DUP-003,true
+INC-004-1,Analyst can change another user role,Analyst sees and submits role form,Access,critical,staging,open,documents/rbac.md,DUP-004,true
+INC-004-2,Analyst can change another user role (reproduced),In QA environment: analyst sees and submits role form. Tested with fresh account.,Access,critical,qa,triaged,documents/rbac.md,DUP-004,true
+INC-005-1,Invoice approves with only one manager,Invoice for 15000 EUR approved once,Finance,high,staging,open,documents/invoice.md,DUP-005,true
+INC-005-2,Invoice approves with only one manager (reproduced),In QA environment: invoice for 15000 eur approved once. Tested with fresh account.,Finance,high,qa,triaged,documents/invoice.md,DUP-005,true
+INC-006-1,Rollback not triggered on failing deployment,Production deployment remains partially updated,Deployment,critical,staging,open,documents/deploy.md,DUP-006,true
+INC-006-2,Rollback not triggered on failing deployment (reproduced),In QA environment: production deployment remains partially updated. Tested with fresh account.,Deployment,critical,qa,triaged,documents/deploy.md,DUP-006,true
+INC-007-1,Audit records local time instead of UTC,UTC timestamps offset by one hour,Audit,medium,staging,open,documents/audit.md,DUP-007,true
+INC-007-2,Audit records local time instead of UTC (reproduced),In QA environment: utc timestamps offset by one hour. Tested with fresh account.,Audit,medium,qa,triaged,documents/audit.md,DUP-007,true
+INC-008-1,Ticket submitted without reproduction steps,Form allows empty reproduction steps,Support,medium,staging,open,documents/ticket.md,DUP-008,true
+INC-008-2,Ticket submitted without reproduction steps (reproduced),In QA environment: form allows empty reproduction steps. Tested with fresh account.,Support,medium,qa,triaged,documents/ticket.md,DUP-008,true
+INC-009-1,Opted-out user receives ticket email,Email delivered after opt out,Notification,high,staging,open,documents/notif.md,DUP-009,true
+INC-009-2,Opted-out user receives ticket email (reproduced),In QA environment: email delivered after opt out. Tested with fresh account.,Notification,high,qa,triaged,documents/notif.md,DUP-009,true
+INC-010-1,CSV import accepts missing required header,Missing amount column accepted,Import,high,staging,open,documents/import.md,DUP-010,true
+INC-010-2,CSV import accepts missing required header (reproduced),In QA environment: missing amount column accepted. Tested with fresh account.,Import,high,qa,triaged,documents/import.md,DUP-010,true
+INC-011-1,Restricted document title leaks in search,Cross-workspace document title appears,Search,critical,staging,open,documents/search.md,DUP-011,true
+INC-011-2,Restricted document title leaks in search (reproduced),In QA environment: cross-workspace document title appears. Tested with fresh account.,Search,critical,qa,triaged,documents/search.md,DUP-011,true
+INC-012-1,Session still active after logout,Token valid after user logs out,Auth,critical,staging,open,documents/session.md,DUP-012,true
+INC-012-2,Session still active after logout (reproduced),In QA environment: token valid after user logs out. Tested with fresh account.,Auth,critical,qa,triaged,documents/session.md,DUP-012,true

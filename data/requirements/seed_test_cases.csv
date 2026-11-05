@@ -1,0 +1,5 @@
+requirement_id,test_scenario,expected_result,known_contradiction
+REQ-AUTH,6 failed sign-ins from same user,Account locked at the 5th failed attempt,config allows 6; conflicts with document
+REQ-RESET,Use password reset link after 31 minutes,Reset rejected as expired,config allows 45; conflicts with document
+REQ-INVOICE,Submit 12000 EUR invoice with one approval,Invoice remains pending second distinct approver,config threshold 15000 and 1 approver; conflicts with document
+REQ-EXPORT,Viewer exports reports for another workspace,Request denied; no records exposed,config allowViewerExport=true may need access-policy enforcement

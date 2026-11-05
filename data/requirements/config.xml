@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<application name="AcmeOps">
+  <authentication maxFailedAttempts="6" lockMinutes="15" resetTokenMinutes="45" />
+  <sessions idleTimeoutMinutes="30" />
+  <invoices dualApprovalThresholdEUR="15000" minApprovers="1" />
+  <reports allowViewerExport="true" enforceWorkspaceAccess="true" />
+</application>
