@@ -1,0 +1,43 @@
+
+[
+  {
+    "id": "RAG001",
+    "question": "How long is an account locked after five failed login attempts?",
+    "answerable": true,
+    "expected_source": "auth.md",
+    "expected_facts": [
+      "Five unsuccessful login attempts",
+      "15-minute account lockout"
+    ]
+  },
+  {
+    "id": "RAG002",
+    "question": "What happens when a deployment fails?",
+    "answerable": true,
+    "expected_source": "deploy.md",
+    "expected_facts": [
+      "Failed deployment triggers rollback"
+    ]
+  },
+  {
+    "id": "RAG003",
+    "question": "How long are audit logs retained?",
+    "answerable": true,
+    "expected_source": "audit.md",
+    "expected_facts": []
+  },
+  {
+    "id": "RAG004",
+    "question": "What is AcmeOps's annual employee salary budget?",
+    "answerable": false,
+    "expected_source": null,
+    "expected_facts": []
+  },
+  {
+    "id": "RAG005",
+    "question": "Which employee received the highest bonus in 2025?",
+    "answerable": false,
+    "expected_source": null,
+    "expected_facts": []
+  }
+]
