@@ -1,0 +1,63 @@
+
+[
+  {
+    "id": "Q001",
+    "question": "How long is an account locked after five failed sign-in attempts?",
+    "relevant_documents": ["auth.md"]
+  },
+  {
+    "id": "Q002",
+    "question": "How long is a password reset link valid?",
+    "relevant_documents": ["reset.md"]
+  },
+  {
+    "id": "Q003",
+    "question": "When does an inactive session expire?",
+    "relevant_documents": ["session.md"]
+  },
+  {
+    "id": "Q004",
+    "question": "Can an Analyst manage user roles?",
+    "relevant_documents": ["rbac.md"]
+  },
+  {
+    "id": "Q005",
+    "question": "What approval is required for invoices above 10000 EUR?",
+    "relevant_documents": ["invoice.md"]
+  },
+  {
+    "id": "Q006",
+    "question": "What happens when deployment fails?",
+    "relevant_documents": ["deploy.md"]
+  },
+  {
+    "id": "Q007",
+    "question": "Which fields must an incident report contain?",
+    "relevant_documents": ["ticket.md"]
+  },
+  {
+    "id": "Q008",
+    "question": "Which file formats are supported for dashboard exports?",
+    "relevant_documents": ["export.md"]
+  },
+  {
+    "id": "Q009",
+    "question": "What happens to invalid CSV import rows?",
+    "relevant_documents": ["import.md"]
+  },
+  {
+    "id": "Q010",
+    "question": "How long are audit logs retained?",
+    "relevant_documents": ["audit.md"]
+  },
+  {
+    "id": "Q011",
+    "question": "What happens when ticket notification subscriptions are disabled?",
+    "relevant_documents": ["notif.md"]
+  },
+  {
+    "id": "Q012",
+    "question": "Can search results expose documents from unauthorized workspaces?",
+    "relevant_documents": ["search.md"]
+  }
+]

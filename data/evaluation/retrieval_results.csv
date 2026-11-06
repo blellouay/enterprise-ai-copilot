@@ -1,0 +1,13 @@
+question_id,question,expected_sources,top_1,recall@1,recall@3,recall@5,hit@3,reciprocal_rank
+Q001,How long is an account locked after five failed sign-in attempts?,auth.md,auth.md,1.0,1.0,1.0,1.0,1.0
+Q002,How long is a password reset link valid?,reset.md,reset.md,1.0,1.0,1.0,1.0,1.0
+Q003,When does an inactive session expire?,session.md,session.md,1.0,1.0,1.0,1.0,1.0
+Q004,Can an Analyst manage user roles?,rbac.md,rbac.md,1.0,1.0,1.0,1.0,1.0
+Q005,What approval is required for invoices above 10000 EUR?,invoice.md,invoice.md,1.0,1.0,1.0,1.0,1.0
+Q006,What happens when deployment fails?,deploy.md,deploy.md,1.0,1.0,1.0,1.0,1.0
+Q007,Which fields must an incident report contain?,ticket.md,ticket.md,1.0,1.0,1.0,1.0,1.0
+Q008,Which file formats are supported for dashboard exports?,export.md,export.md,1.0,1.0,1.0,1.0,1.0
+Q009,What happens to invalid CSV import rows?,import.md,import.md,1.0,1.0,1.0,1.0,1.0
+Q010,How long are audit logs retained?,audit.md,audit.md,1.0,1.0,1.0,1.0,1.0
+Q011,What happens when ticket notification subscriptions are disabled?,notif.md,notif.md,1.0,1.0,1.0,1.0,1.0
+Q012,Can search results expose documents from unauthorized workspaces?,search.md,search.md,1.0,1.0,1.0,1.0,1.0
