@@ -1,16 +1,28 @@
 
 from fastapi import FastAPI
 
-from app.api.routers import health
+from app.api.routers import health, rag
 
 
 app = FastAPI(
     title="Enterprise AI Copilot",
-    description="Enterprise AI platform powered by RAG and LLMs",
-    version="0.1.0"
+    description=(
+        "Enterprise AI platform powered by "
+        "RAG, LLMs, and semantic search"
+    ),
+    version="0.1.0",
 )
 
-app.include_router(health.router, prefix="/api/v1")
+
+app.include_router(
+    health.router,
+    prefix="/api/v1",
+)
+
+app.include_router(
+    rag.router,
+    prefix="/api/v1",
+)
 
 
 @app.get("/")

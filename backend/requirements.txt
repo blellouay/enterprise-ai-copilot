@@ -7,3 +7,4 @@ pandas
 sentence-transformers
 ollama
 pytest
+httpx
