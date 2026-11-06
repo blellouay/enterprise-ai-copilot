@@ -45,3 +45,6 @@ checkpoints/
 # Locally generated application data
 uploads/
 qdrant_storage/
+
+# External datasets downloaded for experiments
+data/external/
