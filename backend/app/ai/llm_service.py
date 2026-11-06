@@ -3,6 +3,8 @@ from ollama import Client
 
 from app.core.config import settings
 
+from app.schemas.rag import RAGDraft
+
 
 class LLMService:
 
@@ -45,3 +47,32 @@ class LLMService:
         )
 
         return response.message.content or ""
+    
+    def generate_rag_draft(
+        self,
+        prompt: str,
+        system_prompt: str,
+    ) -> RAGDraft:
+
+        response = self.client.chat(
+            model=self.model,
+            messages=[
+                {
+                    "role": "system",
+                    "content": system_prompt,
+                },
+                {
+                    "role": "user",
+                    "content": prompt,
+                },
+            ],
+            format=RAGDraft.model_json_schema(),
+            options={
+                "temperature": 0,
+            },
+        )
+
+        return RAGDraft.model_validate_json(
+            response.message.content or ""
+        )
+
