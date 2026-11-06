@@ -8,3 +8,6 @@ sentence-transformers
 ollama
 pytest
 httpx
+markdown-it-py
+PyYAML
+transformers
