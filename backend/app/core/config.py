@@ -15,6 +15,8 @@ class Settings(BaseSettings):
         env_file_encoding="utf-8",
         extra="ignore",
     )
+    ollama_url: str = "http://localhost:11434"
+    ollama_model: str = "llama3.2:3b"
 
 
 settings = Settings()
