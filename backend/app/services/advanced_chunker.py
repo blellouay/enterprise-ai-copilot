@@ -1,5 +1,9 @@
 
+import uuid
+
 from transformers import AutoTokenizer
+
+from app.services.template_normalizer import TemplateNormalizer
 
 
 MODEL_NAME = "sentence-transformers/all-MiniLM-L6-v2"
@@ -28,32 +32,86 @@ class AdvancedChunker:
 
         if not self.tokenizer.is_fast:
             raise RuntimeError(
-                "A fast tokenizer is required for offsets"
+                "A fast tokenizer is required"
             )
 
-    def token_count(self, text: str) -> int:
-        """Count tokens including model special tokens."""
+        self.special_tokens = (
+            self.tokenizer.num_special_tokens_to_add(
+                pair=False
+            )
+        )
 
-        return len(self.tokenizer.encode(
+        if max_tokens <= (
+            self.special_tokens + overlap_tokens
+        ):
+            raise ValueError(
+                "Not enough room for tokens and overlap"
+            )
+
+        self.template_normalizer = TemplateNormalizer()
+
+    def normalize_templates(self, text: str) -> str:
+        return self.template_normalizer.normalize(text)
+
+    def find_unresolved_templates(
+        self,
+        text: str,
+    ) -> list[str]:
+        return self.template_normalizer.unresolved(text)
+
+    def token_count(self, text: str) -> int:
+
+        encoded = self.tokenizer(
             text,
             add_special_tokens=True,
             truncation=False,
-        ))
+            verbose=False,
+        )
+
+        return len(encoded["input_ids"])
+
+    def generate_chunk_id(
+        self,
+        document_id: str,
+        strategy: str,
+        index: int,
+        start_char: int,
+        end_char: int,
+    ) -> str:
+        """
+        Generate a deterministic, globally namespaced UUID.
+        """
+
+        key = (
+            f"{document_id}|{strategy}|{index}|"
+            f"{start_char}|{end_char}"
+        )
+
+        return str(
+            uuid.uuid5(uuid.NAMESPACE_URL, key)
+        )
 
     def split_token_windows(
         self,
         text: str,
         budget: int,
+        prefix: str = "",
     ) -> list[tuple[str, int, int]]:
         """
-        Return (text, start_char, end_char) windows.
+        Split text without losing whitespace.
 
-        Character offsets refer to the original input.
+        Returns:
+            (passage, start_char, end_char)
+
+        Each interval is [start_char, end_char).
+
+        Character offsets refer to the normalized text
+        passed to this method.
         """
 
         if budget <= self.overlap_tokens:
             raise ValueError(
-                "Budget must exceed overlap_tokens"
+                "Budget must exceed overlap"
             )
 
         encoded = self.tokenizer(
@@ -61,6 +119,7 @@ class AdvancedChunker:
             add_special_tokens=False,
             return_offsets_mapping=True,
             truncation=False,
+            verbose=False,
         )
 
         offsets = [
@@ -70,6 +129,10 @@ class AdvancedChunker:
         ]
 
         if not offsets:
+            if text.strip():
+                raise ValueError(
+                    "Tokenizer returned no usable offsets"
+                )
             return []
 
         windows = []
@@ -82,23 +145,58 @@ class AdvancedChunker:
                 len(offsets),
             )
 
-            start_char = offsets[start_index][0]
-            end_char = offsets[end_index - 1][1]
+            # Include whitespace before the first token.
+            start_char = (
+                0 if start_index == 0
+                else offsets[start_index][0]
+            )
 
-            passage = text[start_char:end_char]
+            # Find the end of the next token window.
+            # Using the next token's start position
+            # preserves separating whitespace.
+            while end_index > start_index:
 
-            if passage.strip():
-                windows.append((
-                    passage,
-                    start_char,
-                    end_char,
-                ))
+                end_char = (
+                    offsets[end_index][0]
+                    if end_index < len(offsets)
+                    else len(text)
+                )
+
+                passage = text[start_char:end_char]
+
+                if (
+                    self.token_count(prefix + passage)
+                    <= self.max_tokens
+                ):
+                    break
+
+                end_index -= 1
+
+            if end_index <= start_index:
+                raise RuntimeError(
+                    "Unable to fit a token window "
+                    "within max_tokens"
+                )
+
+            if not passage.strip():
+                raise RuntimeError(
+                    "Unexpected whitespace-only token window"
+                )
+
+            windows.append((
+                passage,
+                start_char,
+                end_char,
+            ))
 
             if end_index == len(offsets):
                 break
 
-            start_index = (
-                end_index - self.overlap_tokens
+            # Overlap is measured in tokens.
+            # Guarantee forward progress.
+            start_index = max(
+                start_index + 1,
+                end_index - self.overlap_tokens,
             )
 
         return windows
@@ -106,41 +204,79 @@ class AdvancedChunker:
     def make_chunk(
         self,
         document: dict,
-        text: str,
         strategy: str,
         index: int,
+        text: str,
+        source_text: str,
+        start_char: int,
+        end_char: int,
         section: dict | None = None,
-        start_offset: int = 0,
     ) -> dict:
 
-        if section is not None:
-            source_start = section["start_line"]
-            source_start += section["content"][
-                :start_offset
-            ].count("\n")
+        count = self.token_count(text)
 
-            source_end = source_start + (
-                text.count("\n")
-                - int(text.endswith("\n"))
+        if (
+            strategy != "section"
+            and count > self.max_tokens
+        ):
+            raise RuntimeError(
+                f"Token limit exceeded: {count}"
             )
+
+        if section is not None:
+
+            # The normalized text preserves line breaks.
+            normalized_section = self.normalize_templates(
+                section["content"]
+            )
+
+            start_line = (
+                section["start_line"]
+                + normalized_section[
+                    :start_char
+                ].count("\n")
+            )
+
+            end_line = (
+                section["start_line"]
+                + normalized_section[
+                    :max(end_char - 1, start_char)
+                ].count("\n")
+            )
+
         else:
-            source_start = None
-            source_end = None
+            start_line = None
+            end_line = None
 
         return {
-            "chunk_id": f"{strategy}_{index}",
+            "chunk_id": self.generate_chunk_id(
+                document["document_id"],
+                strategy,
+                index,
+                start_char,
+                end_char,
+            ),
             "document_id": document["document_id"],
             "source": document["source"],
             "title": document["title"],
             "strategy": strategy,
             "heading_path": (
-                section["heading_path"]
+                [
+                    self.normalize_templates(heading)
+                    for heading in section["heading_path"]
+                ]
                 if section else []
             ),
-            "start_line": source_start,
-            "end_line": source_end,
+            "start_char": start_char,
+            "end_char": end_char,
+            "start_line": start_line,
+            "end_line": end_line,
+            "source_text": source_text,
             "text": text,
-            "token_count": self.token_count(text),
+            "token_count": count,
+            "unresolved_templates": (
+                self.find_unresolved_templates(text)
+            ),
         }
 
     def fixed_chunking(
@@ -149,35 +285,51 @@ class AdvancedChunker:
         original_text: str,
     ) -> list[dict]:
 
-        # Reserve 2 tokens for MiniLM special tokens.
-        budget = self.max_tokens - 2
+        text = self.normalize_templates(original_text)
+
+        budget = (
+            self.max_tokens - self.special_tokens
+        )
 
         windows = self.split_token_windows(
-            original_text,
+            text=text,
             budget=budget,
         )
 
-        return [
-            self.make_chunk(
-                document=document,
-                text=passage,
-                strategy="fixed",
-                index=index,
+        chunks = []
+
+        for index, (
+            passage,
+            start_char,
+            end_char,
+        ) in enumerate(windows):
+
+            chunks.append(
+                self.make_chunk(
+                    document=document,
+                    strategy="fixed",
+                    index=index,
+                    text=passage,
+                    source_text=passage,
+                    start_char=start_char,
+                    end_char=end_char,
+                )
             )
-            for index, (passage, _, _) in enumerate(windows)
-        ]
+
+        return chunks
 
     def section_chunking(
         self,
         document: dict,
     ) -> list[dict]:
-        """One chunk per meaningful Markdown section."""
 
         chunks = []
 
         for section in document["sections"]:
 
-            text = section["content"]
+            text = self.normalize_templates(
+                section["content"]
+            )
 
             if not text.strip():
                 continue
@@ -185,9 +337,12 @@ class AdvancedChunker:
             chunks.append(
                 self.make_chunk(
                     document=document,
-                    text=text,
                     strategy="section",
                     index=len(chunks),
+                    text=text,
+                    source_text=text,
+                    start_char=0,
+                    end_char=len(text),
                     section=section,
                 )
             )
@@ -198,75 +353,70 @@ class AdvancedChunker:
         self,
         document: dict,
     ) -> list[dict]:
-        """Split oversized sections with heading context."""
 
         chunks = []
 
         for section in document["sections"]:
 
-            content = section["content"]
+            content = self.normalize_templates(
+                section["content"]
+            )
 
             if not content.strip():
                 continue
 
-            heading_path = section["heading_path"]
+            heading_path = [
+                self.normalize_templates(heading)
+                for heading in section["heading_path"]
+            ]
 
             prefix = (
-                "Section: " + " > ".join(heading_path) + "\n\n"
-                if heading_path else ""
+                "Section: "
+                + " > ".join(heading_path)
+                + "\n\n"
+                if heading_path
+                else ""
             )
 
-            # Keep enough room for content, including
-            # the model's special tokens.
-            prefix_tokens = self.token_count(prefix) - 2
+            prefix_tokens = (
+                self.token_count(prefix)
+                - self.special_tokens
+            )
 
             budget = (
                 self.max_tokens
+                - self.special_tokens
                 - prefix_tokens
-                - 2
                 - 4
             )
 
             if budget <= self.overlap_tokens:
                 raise ValueError(
-                    "Heading path leaves insufficient "
-                    "space for chunk content"
+                    "Heading path is too long "
+                    "for the token budget"
                 )
 
             windows = self.split_token_windows(
-                content,
+                text=content,
                 budget=budget,
+                prefix=prefix,
             )
 
-            for passage, start_char, _ in windows:
-
-                chunk_text = prefix + passage
-
-                # Defensive verification against
-                # tokenizer boundary effects.
-                if self.token_count(chunk_text) > self.max_tokens:
-                    raise RuntimeError(
-                        "Generated chunk exceeds token limit"
-                    )
+            for passage, start_char, end_char in windows:
 
                 chunk = self.make_chunk(
                     document=document,
-                    text=chunk_text,
                     strategy="hybrid",
                     index=len(chunks),
+                    text=prefix + passage,
+                    source_text=passage,
+                    start_char=start_char,
+                    end_char=end_char,
                     section=section,
-                    start_offset=start_char,
-                )
-
-                # The prefix is generated metadata,
-                # not part of the original source lines.
-                source_text = passage
-                chunk["end_line"] = (
-                    chunk["start_line"]
-                    + source_text.count("\n")
-                    - int(source_text.endswith("\n"))
                 )
 
                 chunks.append(chunk)
 
         return chunks
+
+
